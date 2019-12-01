@@ -1,4 +1,4 @@
-package PACKAGE_NAME;
+public class Problem {
+    int num;   // 微云数量
 
-public class problem {
 }
