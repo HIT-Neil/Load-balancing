@@ -1,39 +1,10 @@
+
 public class Cloudlet {
-
-    int numServers;
-    double serviceRate;
-    double arrivalRate;
-
-    // 计算微云的任务平均等待时间
-    double taskWaitTime(){
-        return 0;
-    }
-
-    // Erlang C公式，用以计算平均等待时间
-    double  formulaErlangC(int n,double p){
-        double result=0;
-        double numerator; // 公式的分子
-        double denominator; // 公式的分母
-        double factorial=2; // 阶乘
-
-        // 计算n的阶乘
-        for(int i=3;i<=n;i++){
-            factorial*=i;
-        }
-
-        // 快速幂计算n*p的n次方
-        double base=n*p;
-        int res=1;
-        int m=n;
-
-        while(m!=0){
-            if((m&1)==1){
-                res*=base;
-            }
-            base*=base;
-            m = m >> 1;
-        }
-        System.out.println(res);
-        return result;
-    }
+    int numServers; // 微云的服务器个数
+    double serviceRate; // 每个服务器的服务速率
+    double arrivalRate; // 微云上的任务到达率
+    double taskWaitTime; // 微云上任务平均等待时间
+    double sumNetDelay; // 微云上的总网络延迟
+    double taskResTime; // 微云上任务的平均响应时间
+    double finalFlow; // 微云上最终剩余的工作流量
 }
