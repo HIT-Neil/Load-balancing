@@ -7,4 +7,5 @@ public class Cloudlet {
     double sumNetDelay; // 微云上的总网络延迟
     double taskResTime; // 微云上任务的平均响应时间
     double finalFlow; // 微云上最终剩余的工作流量
+    double demand; // 微云的迁入迁出需求
 }

@@ -8,11 +8,24 @@ public class Problem {
     double[][] netDelay=new double[num][num];
 
 
+    // 初始化微云
+    void initCloudlet(Cloudlet[] cloudlet){
+        for(int i=0;i<num;i++){
+            cloudlet[i].numServers=0;
+            cloudlet[i].serviceRate=0;
+            cloudlet[i].arrivalRate=0;
+            cloudlet[i].taskWaitTime=calTaskWaitTime(cloudlet[i],cloudlet[i].arrivalRate);
+            cloudlet[i].sumNetDelay=calSumNetDelay(i);
+            cloudlet[i].taskResTime=calTaskResTime(cloudlet[i]);
+            cloudlet[i].finalFlow=calFinalFlow(cloudlet[i],i);
+        }
+    }
+
+
     // 计算微云的任务平均等待时间
-    double calTaskWaitTime(Cloudlet cloudlet){
+    double calTaskWaitTime(Cloudlet cloudlet,double arrivalRate){
         int numServers=cloudlet.numServers;
         double serviceRate=cloudlet.serviceRate;
-        double arrivalRate=cloudlet.arrivalRate;
         double tmp=formulaErlangC(numServers,arrivalRate/serviceRate);
         double result=tmp/(numServers*serviceRate-arrivalRate)+1/serviceRate;
 
