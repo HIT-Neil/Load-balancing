@@ -4,8 +4,8 @@ public class HA {
     double threshold; // 计算需求的阈值
     double accuracy; // 精度限制，算法停止条件
     double balancedTime; // 平衡衡任务响应时间
-    ArrayList<Cloudlet> overloadSet=new ArrayList<>(); // 过载微云集合
-    ArrayList<Cloudlet> underloadedSet=new ArrayList<>(); // // 不过载微云集合
+    ArrayList<Integer> overloadSet=new ArrayList<>(); // 过载微云集合
+    ArrayList<Integer> underloadedSet=new ArrayList<>(); // // 不过载微云集合
     Problem objProb=new Problem();
     Cloudlet[] cloudlet=new Cloudlet[objProb.num];
 
@@ -28,12 +28,14 @@ public class HA {
         while(Math.abs(balancedTime-blnTime)>accuracy){
             // 计算迁入迁出需求
             calDemand();
+            objProb.initFlow();
             // 计算最小延迟流
             minLatencyFlow();
             double maxTmp=0;
             for(int j=0;j<underloadedSet.size();j++){
-                if(underloadedSet.get(j).taskResTime>maxTmp){
-                    maxTmp=underloadedSet.get(j).taskResTime;
+                objProb.calCloudlet(cloudlet[underloadedSet.get(j)],underloadedSet.get(j));
+                if(cloudlet[underloadedSet.get(j)].taskResTime>maxTmp){
+                    maxTmp=cloudlet[underloadedSet.get(j)].taskResTime;
                 }
             }
             blnTime=maxTmp;
@@ -63,9 +65,9 @@ public class HA {
         underloadedSet.clear();
         for(int i=0;i<objProb.num;i++){
             if(cloudlet[i].taskResTime>balancedTime){
-                overloadSet.add(cloudlet[i]);
+                overloadSet.add(i);
             }else{
-                underloadedSet.add(cloudlet[i]);
+                underloadedSet.add(i);
             }
         }
     }
@@ -76,24 +78,26 @@ public class HA {
         double tmp = balancedTime, dem = 0;
         for (int i = 0; i < overloadSet.size(); i++) {
             while (Math.abs(tmp / balancedTime) > threshold) {
-                dem += overloadSet.get(i).arrivalRate / 10;
-                tmp = balancedTime - objProb.calTaskWaitTime(
-                        overloadSet.get(i), overloadSet.get(i).arrivalRate - dem);
+                dem += cloudlet[overloadSet.get(i)].arrivalRate / 10;
+                objProb.calTaskWaitTime(
+                        cloudlet[overloadSet.get(i)], cloudlet[overloadSet.get(i)].arrivalRate - dem);
+                tmp = balancedTime -cloudlet[overloadSet.get(i)].taskWaitTime;
 
             }
-            overloadSet.get(i).demand = dem;
+            cloudlet[overloadSet.get(i)].demand = dem;
         }
 
         tmp=balancedTime;
         dem=0;
         for(int i=0;i<underloadedSet.size();i++){
             while (Math.abs(tmp / balancedTime) > threshold) {
-                dem += underloadedSet.get(i).arrivalRate / 10;
-                tmp = balancedTime - objProb.calTaskWaitTime(
-                        underloadedSet.get(i), underloadedSet.get(i).arrivalRate - dem);
+                dem += cloudlet[underloadedSet.get(i)].arrivalRate / 10;
+                objProb.calTaskWaitTime(
+                        cloudlet[underloadedSet.get(i)], cloudlet[underloadedSet.get(i)].arrivalRate - dem);
+                tmp = balancedTime - cloudlet[underloadedSet.get(i)].taskWaitTime;
 
             }
-            underloadedSet.get(i).demand = dem;
+            cloudlet[underloadedSet.get(i)].demand = dem;
         }
     }
 
