@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class HA {
     double threshold; // 计算需求的阈值
@@ -8,6 +10,7 @@ public class HA {
     ArrayList<Integer> underloadedSet=new ArrayList<>(); // // 不过载微云集合
     Problem objProb=new Problem();
     Cloudlet[] cloudlet=new Cloudlet[objProb.num];
+
 
 
     // 构造函数
@@ -103,14 +106,111 @@ public class HA {
 
     // 最小延迟流
     void minLatencyFlow(){
+        int sumEdge=(overloadSet.size()+underloadedSet.size()+
+                overloadSet.size()*underloadedSet.size())*2;
+        int N= objProb.num+2; // 节点数
+        FlowEdges[] edges=new FlowEdges[sumEdge]; // 所以边的集合
+        int cnt=0; // 记录当前边号
+        int[] head=new int[N]; // 记录以当前节点为起点的最后一条边号
+        int[] pre=new int[N];  // 记录增广路径
+        boolean[] vis=new boolean[N]; // 已经加入队列的节点
+        double[] dis=new double[N]; // 从源点到当前节点的距离
         // 构造最小费用最大流问题的网络
+        // 源点编号num，汇点编号num+1
+        for (int i = 0; i <= N; i++) {
+            head[i] = -1;
+        }
+        // 添加从源点到过载集合的边
+        for (int i = 0; i < overloadSet.size(); i++) {
+            addEdge(head,edges,cnt,objProb.num,overloadSet.get(i), cloudlet[overloadSet.get(i)].demand, 0);
+        }
+        // 添加从过载集合到不过载集合的边
+        for (int i = 0; i < overloadSet.size(); i++) {
+            for(int j=0;j<underloadedSet.size();j++){
+                addEdge(head,edges,cnt,overloadSet.get(i), underloadedSet.get(j),
+                        Math.min(cloudlet[overloadSet.get(i)].demand,cloudlet[underloadedSet.get(j)].demand), objProb.netDelay[i][j]);
+            }
+        }
+        // 添加从不过在集合到汇点的边
+        for (int i = 0; i < overloadSet.size(); i++) {
+            addEdge(head,edges,cnt,underloadedSet.get(i), objProb.num+1,cloudlet[underloadedSet.get(i)].demand, 0);
+        }
 
         // 调用最小费用最大流算法求解
-        minCostMaxFlow();
+        minCostMaxFlow(head,edges,N,vis,dis,pre,objProb.num, objProb.num+1);
     }
 
     // 最小费用最大流算法
-    void minCostMaxFlow(){
+    void minCostMaxFlow(int[] head,FlowEdges[] edges,int N,boolean[] vis,double[] dis,int[] pre,int s, int t){
+       // double incFlow = 0, incCost = 0;
+        while (spfa(head,edges, N,vis,dis,pre,objProb.num, objProb.num+1)) {
+            double Min = Double.MAX_VALUE;
+            for (int i = pre[t]; i != -1; i = pre[edges[i ].from])
+                Min = Math.min(Min, edges[i].capacity - edges[i].eFlow);
+            for (int i = pre[t]; i != -1; i = pre[edges[i ].from]) {
+                edges[i].eFlow += Min;
+                edges[i ^ 1].eFlow -= Min;
+                objProb.flow[edges[i].from][edges[i].to]+=Min;
+                objProb.flow[edges[i].to][edges[i].from]-=Min;
+                // incCost += edges[i].cost*Min;
+            }
+            // incFlow += Min;
+        }
+    }
 
+    void addEdge(int[] head,FlowEdges[] edges,int cnt,int x,int y,double w,double c){
+        // 添加前向边
+        edges[cnt].from = x;
+        edges[cnt].to = y;
+        edges[cnt].capacity = w;
+        edges[cnt].cost = c;
+        edges[cnt].eFlow = 0;
+        edges[cnt].next = head[x];
+        head[x] = cnt++;
+        // 添加反向边
+        edges[cnt].from = y;
+        edges[cnt].to = x;
+        edges[cnt].capacity = 0;
+        edges[cnt].cost = -c;
+        edges[cnt].eFlow = 0;
+        edges[cnt].next = head[y];
+        head[y] = cnt++;
+    }
+
+    // spfa算法，求解最短路径
+    boolean spfa(int[] head,FlowEdges[] edges,int N,boolean[] vis,double[] dis,int[] pre,int s, int t)
+    {
+        Queue<Integer> q = new LinkedList<>();
+
+        for (int i = 0; i <= N; i++) {
+            vis[i] = false;
+            dis[i] = Double.MAX_VALUE;
+            pre[i] = -1;
+        }
+
+        vis[s] = true;
+        dis[s] = 0;
+        q.offer(s);
+
+        while (q.peek()!=null) {
+            int u = q.poll();
+            vis[u] = false;
+
+            for (int i = head[u]; i != -1; i = edges[i].next) {
+                int v = edges[i].to;
+
+                if (edges[i].capacity > edges[i].eFlow&&dis[v] > dis[u] + edges[i].cost) {
+                    dis[v] = dis[u] + edges[i].cost;
+                    pre[v] = i;
+
+                    if (!vis[v]) {
+                        vis[v] = true;
+                        q.offer(v);
+                    }
+                }
+            }
+        }
+        if (pre[t] == -1) return false;
+        return true;
     }
 }
