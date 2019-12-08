@@ -44,6 +44,16 @@ public class HA {
             blnTime=maxTmp;
             balancedTime=(balancedTime+blnTime)/2;
         }
+
+        double maxResTime=0;
+        for(int i=0;i<objProb.num;i++){
+            objProb.calCloudlet(cloudlet[i],i);
+            if(cloudlet[i].taskResTime>maxResTime){
+                maxResTime=cloudlet[i].taskResTime;
+            }
+        }
+
+        System.out.println("用启发式算法得到的平均响应时间为："+maxResTime);
     }
 
 
