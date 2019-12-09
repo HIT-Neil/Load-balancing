@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class DGA {
     Problem prob=new Problem();
     int K =prob.num; // 微云数量
@@ -27,23 +29,33 @@ public class DGA {
     }
 
     // 创建岛屿
-    void createIsland(int id,int reference){
+    void createIsland(int id,int ref){
         islands[id].numGenes=numGenes;
-        islands[id].numUnder=reference+1;
-        islands[id].numOver=K-reference-1;
+        islands[id].numUnder=ref+1;
+        islands[id].numOver=K-ref-1;
 
         islands[id].initGenePool();
 
+        // 随机生成基因
+        Random r = new Random();
+        double tmp;
         // 对于基因g[i][j]，p是划分的依据节点，有
         // i对应于cloudId[p+1+i](过载)
         // j对应于cloudId[j](不过载)
         for(int num=0;num<islands[id].numGenes;num++){
             for(int i=0;i<islands[id].numOver;i++){
+                double arrRate=clouds[cloudId[ref+1+i]].arrivalRate;
                 for(int j=0;j<islands[id].numUnder;j++){
-                    islands[id].genePool[num][i][j]=0;
+                    islands[id].genePool[num][i][j]=r.nextDouble()*arrRate;
                 }
             }
+            adjGene(islands[id],ref);
         }
+
+        
+
+
+
     }
 
     // 根据平均响应时间给微云排序
@@ -63,5 +75,40 @@ public class DGA {
         }
     }
 
+    /// 检查是否满足约束条件，第i行的和小于对应微云的任务到达率
+    // 第j列的和小于对应微云的服务器数与效率的乘积
+    // 如果不满足需要随机减小值，使满足约束条件
+    void adjGene(Island island,int ref){
+        for(int num=0;num<island.numGenes;num++){
+            for(int i=0;i<island.numOver;i++){
+                double sumRow=0;
+                for(int j=0;j<island.numUnder;j++){
+                    sumRow+=island.genePool[num][i][j];
+                }
+                if(sumRow>clouds[cloudId[ref+1+i]].arrivalRate){
+                    double des=clouds[cloudId[ref+1+i]].arrivalRate/sumRow;
+                    for(int j=0;j<island.numUnder;j++){
+                        Random r=new Random();
+                        island.genePool[num][i][j]*=(r.nextDouble()*(des));
+                    }
+                }
+
+            }
+            for (int j = 0; j < island.numUnder; j++) {
+                double sumColumn=0;
+                for (int i = 0; i < island.numOver; i++) {
+                    sumColumn += island.genePool[num][i][j];
+                }
+                double sp=clouds[cloudId[j]].numServers*clouds[cloudId[j]].serviceRate;
+                if(sumColumn>sp){
+                    double des=sp/sumColumn;
+                    for(int i=0;i<island.numOver;i++){
+                        Random r=new Random();
+                        island.genePool[num][i][j]*=(r.nextDouble()*des);
+                    }
+                }
+            }
+        }
+    }
 
 }

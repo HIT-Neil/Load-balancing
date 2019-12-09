@@ -62,8 +62,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/DGA.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="42" column="54" lean-forward="true" selection-start-line="42" selection-start-column="54" selection-end-line="42" selection-end-column="54" />
+            <state relative-caret-position="141">
+              <caret line="38" column="17" selection-start-line="38" selection-start-column="17" selection-end-line="38" selection-end-column="17" />
               <folding>
                 <element signature="e#239#240#0" expanded="true" />
                 <element signature="e#262#263#0" expanded="true" />
@@ -203,12 +203,12 @@
       <updated>1574905724800</updated>
       <workItem from="1574905733940" duration="7554000" />
       <workItem from="1575180821967" duration="8673000" />
-      <workItem from="1575272343427" duration="34565000" />
+      <workItem from="1575272343427" duration="39248000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="50792000" />
+    <option name="totallyTimeSpent" value="55475000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -307,8 +307,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/DGA.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="42" column="54" lean-forward="true" selection-start-line="42" selection-start-column="54" selection-end-line="42" selection-end-column="54" />
+        <state relative-caret-position="141">
+          <caret line="38" column="17" selection-start-line="38" selection-start-column="17" selection-end-line="38" selection-end-column="17" />
           <folding>
             <element signature="e#239#240#0" expanded="true" />
             <element signature="e#262#263#0" expanded="true" />
