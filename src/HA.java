@@ -54,6 +54,13 @@ public class HA {
         }
 
         System.out.println("用启发式算法得到的平均响应时间为："+maxResTime);
+        System.out.println("方案为：");
+        for(int i=0;i<objProb.num;i++){
+            for(int j=0;j<objProb.num;j++){
+                System.out.print(objProb.flow[i][j]+" ");
+            }
+            System.out.println(" ");
+        }
     }
 
 

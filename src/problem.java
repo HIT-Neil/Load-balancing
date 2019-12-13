@@ -1,6 +1,6 @@
 import java.util.*;
 public class Problem {
-    int num;   // 微云数量
+    static int  num;   // 微云数量
     // flow[i][j]表示从微云i到微云j的工作流大小
     // 且flow[i][j]=-flow[j][i]
     double[][] flow=new double[num][num];

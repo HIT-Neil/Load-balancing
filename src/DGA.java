@@ -7,10 +7,13 @@ public class DGA {
     int[] cloudId=new int[K];
     Island[] islands=new Island[K];
     int numGenes; // 每个岛屿上的基因数量
-
     void DGA(int num){
         numGenes=num;
     }
+    double numGeneration; // 迭代次数
+    int[] geneId=new int[numGenes];
+    double[] fitness=new double[numGenes];
+    ResultTable[][] result=new ResultTable[K][K];
 
     // 分布式遗传算法
     void distributedAlgorithm(){
@@ -52,10 +55,59 @@ public class DGA {
             adjGene(islands[id],ref);
         }
 
+        for(int gen=1;gen<numGeneration;gen++){
+            sortByFitness(id,ref);
+            result[ref][id].fitness=fitness[geneId[0]];
+            geneToFlow(geneId[0],id,ref);
+            for(int i=0;i<K;i++){
+                for(int j=0;j<K;j++){
+                    result[ref][id].result[i][j]=prob.flow[i][j];
+                }
+            }
+        }
+
         
 
+    }
 
+    // 基因对应的方案
+    void geneToFlow(int l,int id,int ref){
+        prob.initFlow();
+        for(int i=0;i<islands[id].numOver;i++){
+            for(int j=0;j<islands[id].numUnder;j++){
+                prob.flow[cloudId[ref+1+i]][cloudId[j]]=islands[id].genePool[l][i][j];
+                prob.flow[cloudId[j]][cloudId[ref+1+i]]=-islands[id].genePool[l][i][j];
+            }
+        }
+    }
 
+    // 根据适应度函数（平均响应时间）给基因排序
+    void sortByFitness(int id,int ref){
+
+        for(int l=0;l<numGenes;l++){
+            geneId[l]=l;
+            fitness[l]=0;
+           geneToFlow(l,id,ref);
+            for(int i=0;i<K;i++){
+                prob.calCloudlet(clouds[i],i);
+            }
+
+            for(int i = 0; i< K ; i++){
+                if(clouds[i].taskResTime>fitness[l]){
+                    fitness[l]=clouds[i].taskResTime;
+                }
+            }
+        }
+
+        for(int i=0;i<numGenes-1;i++){
+            for(int j=i+1;j<numGenes;j++){
+                if(fitness[j]>fitness[i]){
+                    int tmp=geneId[i];
+                    geneId[i]=geneId[j];
+                    geneId[j]=tmp;
+                }
+            }
+        }
     }
 
     // 根据平均响应时间给微云排序
@@ -69,7 +121,7 @@ public class DGA {
                 if(clouds[cloudId[j]].taskResTime<clouds[cloudId[i]].taskResTime){
                     int tmp=cloudId[i];
                     cloudId[i]=cloudId[j];
-                    cloudId[i]=tmp;
+                    cloudId[j]=tmp;
                 }
             }
         }
