@@ -4,14 +4,14 @@ public class DGA {
     Problem prob=new Problem();
     int K =prob.num; // 微云数量
     Cloudlet[] clouds=new Cloudlet[K];
-    int[] cloudId=new int[K];
-    Island[] islands=new Island[K];
+    int[] cloudId=new int[K]; // 微云编号
+    Island[] islands=new Island[K]; // 岛屿集合
     int numGenes; // 每个岛屿上的基因数量
     void DGA(int num){
         numGenes=num;
     }
     double numGeneration; // 迭代次数
-    int[] geneId=new int[numGenes];
+    int[] geneId=new int[numGenes]; // 基因编号
     double[] fitness=new double[numGenes];
     ResultTable[][] result=new ResultTable[K][K];
 
@@ -28,7 +28,6 @@ public class DGA {
                 createIsland(id,p);
             }
         }
-
     }
 
     // 创建岛屿
@@ -56,18 +55,18 @@ public class DGA {
         }
 
         for(int gen=1;gen<numGeneration;gen++){
+            // 根据适应度函数排序
             sortByFitness(id,ref);
+            // 保存最佳个体基因的适应度值
             result[ref][id].fitness=fitness[geneId[0]];
             geneToFlow(geneId[0],id,ref);
+            // 保存最佳个体基因的方案
             for(int i=0;i<K;i++){
                 for(int j=0;j<K;j++){
                     result[ref][id].result[i][j]=prob.flow[i][j];
                 }
             }
         }
-
-        
-
     }
 
     // 基因对应的方案
@@ -83,7 +82,6 @@ public class DGA {
 
     // 根据适应度函数（平均响应时间）给基因排序
     void sortByFitness(int id,int ref){
-
         for(int l=0;l<numGenes;l++){
             geneId[l]=l;
             fitness[l]=0;
