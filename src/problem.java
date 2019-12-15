@@ -5,7 +5,7 @@ public class Problem {
     // 且flow[i][j]=-flow[j][i]
     double[][] flow=new double[num][num];
     // 网络延迟，netDelay[i][j]代表微云i到微云j的网络延迟
-    double[][] netDelay=new double[num][num];
+    static double[][] netDelay=new double[num][num];
 
     // 初始化flow
     void initFlow(){
