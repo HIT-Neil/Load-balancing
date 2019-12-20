@@ -1,11 +1,18 @@
 import java.util.*;
 public class Problem {
-    static int  num;   // 微云数量
+    static int  num=40;   // 微云数量
+
+    // NET
+    static double[] lamda={};  // 任务到达率lamda
+    static int[] number={};   // 服务器数量n
+    static double[] mu={};    // 服务速率mu
+    // 网络延迟，netDelay[i][j]代表微云i到微云j的网络延迟
+    static double[][] netDelay={};
+
     // flow[i][j]表示从微云i到微云j的工作流大小
     // 且flow[i][j]=-flow[j][i]
     double[][] flow=new double[num][num];
-    // 网络延迟，netDelay[i][j]代表微云i到微云j的网络延迟
-    static double[][] netDelay=new double[num][num];
+
 
     // 初始化flow
     void initFlow(){
@@ -20,9 +27,9 @@ public class Problem {
     // 初始化微云
     void initCloudlet(Cloudlet[] cloudlet){
         for(int i=0;i<num;i++){
-            cloudlet[i].numServers=0;
-            cloudlet[i].serviceRate=0;
-            cloudlet[i].arrivalRate=0;
+            cloudlet[i].arrivalRate=lamda[i];
+            cloudlet[i].numServers=number[i];
+            cloudlet[i].serviceRate=mu[i];
             calCloudlet(cloudlet[i],i);
         }
     }

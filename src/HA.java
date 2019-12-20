@@ -5,8 +5,9 @@ import java.util.Queue;
 public class HA {
     double theta; // 精度限制，算法停止条件
     double epsilon; // 计算需求的阈值
+
     // 构造函数
-    void HA(double t,double e){
+    HA(double t,double e){
         theta =t;
         epsilon =e;
     }
@@ -20,6 +21,9 @@ public class HA {
 
     // 启发式算法
     void heuristicAlgorithm(){
+        objProb.initFlow();
+        objProb.initCloudlet(cloudlet);
+
         // 初始化平衡任务响应时间
         initBalancedTime();
         // 根据balancedTime将微云划分为两个集合

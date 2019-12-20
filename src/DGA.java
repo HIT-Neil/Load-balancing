@@ -9,7 +9,7 @@ public class DGA {
     int numGeneration; // 迭代次数
 
     // 构造函数
-    void DGA(int s ,int p,double rMut,double rMig,double pMig,int n){
+    DGA(int s ,int p,double rMut,double rMig,double pMig,int n){
         numSurvive=s;
         numGenes=p;
         mutRate=rMut;
