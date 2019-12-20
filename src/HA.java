@@ -31,11 +31,13 @@ public class HA {
         double blnTime=Double.MAX_VALUE; // 用于判断循环结束的条件
 
         while(Math.abs(balancedTime-blnTime)> theta){
+            System.out.println(Math.abs(balancedTime-blnTime));
             // 计算迁入迁出需求
             calDemand();
             objProb.initFlow();
             // 计算最小延迟流
             minLatencyFlow();
+            System.out.println("minFlow");
             double maxTmp=0;
             for(int j=0;j<underloadedSet.size();j++){
                 objProb.calCloudlet(cloudlet[underloadedSet.get(j)],underloadedSet.get(j));
@@ -100,11 +102,10 @@ public class HA {
         double tmp = balancedTime, dem = 0;
         for (int i = 0; i < overloadSet.size(); i++) {
             while (Math.abs(tmp / balancedTime) > epsilon) {
-                dem += cloudlet[overloadSet.get(i)].arrivalRate / 10;
+                dem += cloudlet[overloadSet.get(i)].arrivalRate / 150;
                 objProb.calTaskWaitTime(
                         cloudlet[overloadSet.get(i)], cloudlet[overloadSet.get(i)].arrivalRate - dem);
                 tmp = balancedTime -cloudlet[overloadSet.get(i)].taskWaitTime;
-
             }
             cloudlet[overloadSet.get(i)].demand = dem;
         }
@@ -112,12 +113,11 @@ public class HA {
         tmp=balancedTime;
         dem=0;
         for(int i=0;i<underloadedSet.size();i++){
-            while (Math.abs(tmp / balancedTime) > epsilon) {
-                dem += cloudlet[underloadedSet.get(i)].arrivalRate / 10;
+            while (Math.abs(tmp / balancedTime) > epsilon&&dem<=cloudlet[underloadedSet.get(i)].arrivalRate) {
+                dem += cloudlet[underloadedSet.get(i)].arrivalRate / 150;
                 objProb.calTaskWaitTime(
                         cloudlet[underloadedSet.get(i)], cloudlet[underloadedSet.get(i)].arrivalRate - dem);
                 tmp = balancedTime - cloudlet[underloadedSet.get(i)].taskWaitTime;
-
             }
             cloudlet[underloadedSet.get(i)].demand = dem;
         }
@@ -136,7 +136,7 @@ public class HA {
         double[] dis=new double[N]; // 从源点到当前节点的距离
         // 构造最小费用最大流问题的网络
         // 源点编号num，汇点编号num+1
-        for (int i = 0; i <= N; i++) {
+        for (int i = 0; i < N; i++) {
             head[i] = -1;
         }
         // 添加从源点到过载集合的边
@@ -163,6 +163,7 @@ public class HA {
     void minCostMaxFlow(int[] head,FlowEdges[] edges,int N,boolean[] vis,double[] dis,int[] pre,int s, int t){
        // double incFlow = 0, incCost = 0;
         while (spfa(head,edges, N,vis,dis,pre,objProb.num, objProb.num+1)) {
+            System.out.println("spfa");
             double Min = Double.MAX_VALUE;
             for (int i = pre[t]; i != -1; i = pre[edges[i ].from])
                 Min = Math.min(Min, edges[i].capacity - edges[i].eFlow);
@@ -179,20 +180,25 @@ public class HA {
 
     void addEdge(int[] head,FlowEdges[] edges,int cnt,int x,int y,double w,double c){
         // 添加前向边
-        edges[cnt].from = x;
-        edges[cnt].to = y;
-        edges[cnt].capacity = w;
-        edges[cnt].cost = c;
-        edges[cnt].eFlow = 0;
-        edges[cnt].next = head[x];
+        FlowEdges newEdge=new FlowEdges();
+
+        newEdge.from = x;
+        newEdge.to = y;
+        newEdge.capacity = w;
+        newEdge.cost = c;
+        newEdge.eFlow = 0;
+        newEdge.next = head[x];
+        edges[cnt]=newEdge;
         head[x] = cnt++;
         // 添加反向边
-        edges[cnt].from = y;
-        edges[cnt].to = x;
-        edges[cnt].capacity = 0;
-        edges[cnt].cost = -c;
-        edges[cnt].eFlow = 0;
-        edges[cnt].next = head[y];
+        FlowEdges antiEdge=new FlowEdges();
+        antiEdge.from = y;
+        antiEdge.to = x;
+        antiEdge.capacity = 0;
+        antiEdge.cost = -c;
+        antiEdge.eFlow = 0;
+        antiEdge.next = head[y];
+        edges[cnt]=antiEdge;
         head[y] = cnt++;
     }
 
@@ -201,7 +207,7 @@ public class HA {
     {
         Queue<Integer> q = new LinkedList<>();
 
-        for (int i = 0; i <= N; i++) {
+        for (int i = 0; i < N; i++) {
             vis[i] = false;
             dis[i] = Double.MAX_VALUE;
             pre[i] = -1;

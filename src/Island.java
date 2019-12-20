@@ -5,13 +5,13 @@ public class Island {
     int numFromMig=0; // 迁移来的基因数
     // 基因池，genepool[i][j][k]表示
     // 第i个基因是g[j][k]
-    double[][][] genePool=new double[numGenes][numOver][numUnder];
+    double[][][] genePool;
 
     // 标记该基因是否可用
-    boolean[] available=new boolean[numGenes];
+    boolean[] available;
 
     // 其他节点迁移来的基因
-    double[][][] geneFromMig=new double[numGenes][numOver][numUnder];
+    double[][][] geneFromMig;
 
     void initGenePool(){
         for(int num=0;num<numGenes;num++){
