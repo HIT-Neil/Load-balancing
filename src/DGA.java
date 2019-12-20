@@ -1,32 +1,44 @@
 import java.util.Random;
 
 public class DGA {
-    Problem prob=new Problem();
-    int K =prob.num; // 微云数量
-    Cloudlet[] clouds=new Cloudlet[K];
-    int[] cloudId=new int[K]; // 微云编号
-    Island[] islands=new Island[K]; // 岛屿集合
+    int numSurvive; // 保留到下一代的数量
     int numGenes; // 每个岛屿上的基因数量
-    void DGA(int num){
-        numGenes=num;
+    double mutRate; // 变异率
+    double migRate; // 迁移率
+    double migPercentage; // 迁移百分比
+    int numGeneration; // 迭代次数
+
+    // 构造函数
+    void DGA(int s ,int p,double rMut,double rMig,double pMig,int n){
+        numSurvive=s;
+        numGenes=p;
+        mutRate=rMut;
+        migRate=rMig;
+        migPercentage=pMig;
+        numGeneration=n;
     }
-    double numGeneration; // 迭代次数
+
+    Problem prob=new Problem();
+    Cloudlet[] clouds=new Cloudlet[Problem.num];
+    int[] cloudId=new int[Problem.num]; // 微云编号
+    Island[] islands=new Island[Problem.num]; // 岛屿集合
     int[] geneId=new int[numGenes]; // 基因编号
-    double[] fitness=new double[numGenes];
-    ResultTable[][] result=new ResultTable[K][K];
+    double[] fitness=new double[numGenes]; // 适应度值
+    ResultTable[][] result=new ResultTable[Problem.num][Problem.num]; // 保存结果的二维数组
 
     // 分布式遗传算法
     void distributedAlgorithm(){
         prob.initFlow();
         prob.initCloudlet(clouds);
-        for(int i = 0; i< K; i++){
+        for(int i = 0; i< Problem.num; i++){
             cloudId[i]=i;
         }
         sortByResTime();
-        for(int p = 1; p< K-1 ; p++){
-            for(int id=0;id<K;id++){
+        for(int p = 1; p< Problem.num-1 ; p++){
+            for(int id=0;id<Problem.num;id++){
                 createIsland(id,p);
             }
+
         }
     }
 
@@ -34,8 +46,7 @@ public class DGA {
     void createIsland(int id,int ref){
         islands[id].numGenes=numGenes;
         islands[id].numUnder=ref+1;
-        islands[id].numOver=K-ref-1;
-
+        islands[id].numOver=Problem.num-ref-1;
         islands[id].initGenePool();
 
         // 随机生成基因
@@ -61,13 +72,107 @@ public class DGA {
             result[ref][id].fitness=fitness[geneId[0]];
             geneToFlow(geneId[0],id,ref);
             // 保存最佳个体基因的方案
-            for(int i=0;i<K;i++){
-                for(int j=0;j<K;j++){
+            for(int i=0;i<Problem.num;i++){
+                for(int j=0;j<Problem.num;j++){
                     result[ref][id].result[i][j]=prob.flow[i][j];
                 }
             }
+
+
+            // 轮盘赌选择固定数量的基因进行迁移到其他节点
+            int cur=0;
+            Random random=new Random();
+            if(random.nextDouble()<migRate){
+                // 迁移数量
+                double numMig=migPercentage*numGenes;
+                for(int cnt=0;cnt<numMig;){
+                    cur+=random.nextInt(numGenes)%numGenes;
+                    if(islands[id].available[cur]){
+                        for(int ii=0;ii<islands[id].numOver;ii++){
+                            for(int jj=0;jj<islands[id].numUnder;jj++){
+                                islands[cur%Problem.num+id+1].geneFromMig[islands[cur%Problem.num+id+1].numFromMig][ii][jj]
+                                        =islands[id].genePool[cur][ii][jj];
+                            }
+                        }
+                        islands[id].available[cur]=false;
+                        islands[cur%Problem.num+id+1].numFromMig++;
+                        cnt++;
+                    }
+                }
+            }
+
+            double[][][] tmpGenePool=new double[islands[id].numGenes][islands[id].numOver][islands[id].numUnder];
+            int numTmpPool=0;
+            // 获取来自迁移的基因
+            if(islands[id].numFromMig>0){
+                numTmpPool=islands[id].numFromMig;
+                for(int c=0;c<islands[id].numFromMig;c++){
+                    for(int i=0;i<islands[id].numFromMig;i++){
+                        for(int j=0;j<islands[id].numUnder;j++){
+                            tmpGenePool[c][i][j]=islands[id].genePool[c][i][j];
+                        }
+                    }
+                }
+                islands[id].numFromMig=0;
+            }
+
+            // 选择固定数量的基因保留到下一代
+            for(int c=0;c<numSurvive;c++){
+                for(int i=0;i<islands[id].numFromMig;i++){
+                    for(int j=0;j<islands[id].numUnder;j++){
+                        tmpGenePool[numTmpPool+c][i][j]=islands[id].genePool[geneId[c]][i][j];
+                    }
+                }
+            }
+            numTmpPool+=numSurvive;
+            // 交叉扩充子代数量，子代为父代的平均值
+            for (int i = numTmpPool; i < numGenes; i++) {
+                int p1 = random.nextInt(i);
+                int p2 = random.nextInt(i);
+                for (int ii = 0; ii < islands[id].numFromMig; ii++) {
+                    for (int jj = 0; jj < islands[id].numUnder; jj++) {
+                        tmpGenePool[i][ii][jj]
+                                = (islands[id].genePool[p1][ii][jj] + islands[id].genePool[p2][ii][jj]) / 2;
+                    }
+                }
+                // 变异算子,随机交换两行两列
+                if(random.nextDouble()<mutRate){
+                    int r1=random.nextInt(i);
+                    int r2=random.nextInt(i);
+                    if(r1!=r2){
+                        for(int j=0;j<islands[id].numUnder;j++){
+                            swap(tmpGenePool[i][r1][j],tmpGenePool[i][r2][j]) ;
+                        }
+                    }
+                    int c1=random.nextInt(islands[id].numUnder);
+                    int c2=random.nextInt(islands[id].numUnder);
+                    if(c1!=c2){
+                        for(int j=0;j<i;j++){
+                            swap(tmpGenePool[i][j][c1],tmpGenePool[i][j][c2]);
+                        }
+                    }
+                }
+            }
+
+            // 用子代基因替换父代基因
+            for(int c=0;c<islands[id].numGenes;c++){
+                for(int i=0;i<islands[id].numOver;i++){
+                    for(int j=0;j<islands[id].numUnder;j++){
+                        islands[id].genePool[c][i][j]= tmpGenePool[c][i][j];
+                    }
+                }
+            }
+            adjGene(islands[id], ref);
         }
     }
+
+
+    void swap(double a,double b){
+        double tmp=a;
+        a=b;
+        b=tmp;
+    }
+
 
     // 基因对应的方案
     void geneToFlow(int l,int id,int ref){
@@ -86,11 +191,11 @@ public class DGA {
             geneId[l]=l;
             fitness[l]=0;
            geneToFlow(l,id,ref);
-            for(int i=0;i<K;i++){
+            for(int i=0;i<Problem.num;i++){
                 prob.calCloudlet(clouds[i],i);
             }
 
-            for(int i = 0; i< K ; i++){
+            for(int i = 0; i< Problem.num ; i++){
                 if(clouds[i].taskResTime>fitness[l]){
                     fitness[l]=clouds[i].taskResTime;
                 }
@@ -110,12 +215,12 @@ public class DGA {
 
     // 根据平均响应时间给微云排序
     void sortByResTime(){
-        for(int i = 0; i< K; i++){
+        for(int i = 0; i< Problem.num; i++){
             prob.calCloudlet(clouds[i],i);
         }
 
-        for(int i = 0; i< K -1; i++){
-            for(int j = i+1; j< K; j++){
+        for(int i = 0; i< Problem.num -1; i++){
+            for(int j = i+1; j< Problem.num; j++){
                 if(clouds[cloudId[j]].taskResTime<clouds[cloudId[i]].taskResTime){
                     int tmp=cloudId[i];
                     cloudId[i]=cloudId[j];

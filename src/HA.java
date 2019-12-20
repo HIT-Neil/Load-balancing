@@ -3,21 +3,19 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class HA {
-    double threshold; // 计算需求的阈值
-    double accuracy; // 精度限制，算法停止条件
+    double theta; // 精度限制，算法停止条件
+    double epsilon; // 计算需求的阈值
+    // 构造函数
+    void HA(double t,double e){
+        theta =t;
+        epsilon =e;
+    }
+
     double balancedTime; // 平衡衡任务响应时间
     ArrayList<Integer> overloadSet=new ArrayList<>(); // 过载微云集合
     ArrayList<Integer> underloadedSet=new ArrayList<>(); // // 不过载微云集合
     Problem objProb=new Problem();
     Cloudlet[] cloudlet=new Cloudlet[objProb.num];
-
-
-
-    // 构造函数
-    void HA(double e,double t){
-        threshold=e;
-        accuracy=t;
-    }
 
 
     // 启发式算法
@@ -28,7 +26,7 @@ public class HA {
         partition(cloudlet);
         double blnTime=Double.MAX_VALUE; // 用于判断循环结束的条件
 
-        while(Math.abs(balancedTime-blnTime)>accuracy){
+        while(Math.abs(balancedTime-blnTime)> theta){
             // 计算迁入迁出需求
             calDemand();
             objProb.initFlow();
@@ -97,7 +95,7 @@ public class HA {
     void calDemand() {
         double tmp = balancedTime, dem = 0;
         for (int i = 0; i < overloadSet.size(); i++) {
-            while (Math.abs(tmp / balancedTime) > threshold) {
+            while (Math.abs(tmp / balancedTime) > epsilon) {
                 dem += cloudlet[overloadSet.get(i)].arrivalRate / 10;
                 objProb.calTaskWaitTime(
                         cloudlet[overloadSet.get(i)], cloudlet[overloadSet.get(i)].arrivalRate - dem);
@@ -110,7 +108,7 @@ public class HA {
         tmp=balancedTime;
         dem=0;
         for(int i=0;i<underloadedSet.size();i++){
-            while (Math.abs(tmp / balancedTime) > threshold) {
+            while (Math.abs(tmp / balancedTime) > epsilon) {
                 dem += cloudlet[underloadedSet.get(i)].arrivalRate / 10;
                 objProb.calTaskWaitTime(
                         cloudlet[underloadedSet.get(i)], cloudlet[underloadedSet.get(i)].arrivalRate - dem);
