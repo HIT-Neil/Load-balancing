@@ -42,6 +42,14 @@ public class DGA {
             }
             for (int id = 0; id < Problem.num; id++) {
                 evolve(id, p);
+                System.out.println("the best in partition "+p+" island "+id+" is following:");
+                System.out.println("fitness:"+result[p][id].fitness);
+                for (int i = 0; i < Problem.num; i++) {
+                    for (int j = 0; j < Problem.num; j++) {
+                        System.out.print(result[p][id].result[i][j] + " ");
+                    }
+                    System.out.println(" ");
+                }
             }
         }
         int bestI = 0, bestJ = 0;
@@ -93,24 +101,33 @@ public class DGA {
             }
             adjGene(islands[id], ref);
         }
+
+
         for (int gen = 1; gen <= numGeneration; gen++) {
-            System.out.println("partition:" + ref + "****" + "island:" + id + "****" + "generation:" + gen);
+            //System.out.println("partition:" + ref + "****" + "island:" + id + "****" + "generation:" + gen);
             // 根据适应度函数排序
             sortByFitness(id, ref);
             // 保存最佳个体基因的适应度值
             ResultTable best = new ResultTable();
             best.fitness = fitness[geneId[0]];
-            System.out.println("best_fitness:" + best.fitness);
+            //System.out.println("best_fitness:" + best.fitness);
             geneToFlow(geneId[0], id, ref);
             // 保存最佳个体基因的方案
             for (int i = 0; i < Problem.num; i++) {
                 for (int j = 0; j < Problem.num; j++) {
                     best.result[i][j] = prob.flow[i][j];
-                    System.out.print(prob.flow[i][j] + " ");
+                    //System.out.print(prob.flow[i][j] + " ");
                 }
             }
-            System.out.println(" ");
-            result[ref][id] = best;
+            //System.out.println(" ");
+            if(gen==1){
+                result[ref][id] = best;
+            }
+            else{
+                if(best.fitness<result[ref][id].fitness){
+                    result[ref][id]=best;
+                }
+            }
             // 轮盘赌选择固定数量的基因进行迁移到其他节点
             int cur = 0;
 
@@ -163,10 +180,12 @@ public class DGA {
             for (int i = numTmpPool; i < numGenes; i++) {
                 int p1 = random.nextInt(i - 1);
                 int p2 = random.nextInt(i - 1);
-                for (int ii = 0; ii < islands[id].numOver; ii++) {
-                    for (int jj = 0; jj < islands[id].numUnder; jj++) {
-                        tmpGenePool[i][ii][jj]
-                                = (tmpGenePool[p1][ii][jj] + tmpGenePool[p2][ii][jj]) / 2;
+                if(p1!=p2){
+                    for (int ii = 0; ii < islands[id].numOver; ii++) {
+                        for (int jj = 0; jj < islands[id].numUnder; jj++) {
+                            tmpGenePool[i][ii][jj]
+                                    = (tmpGenePool[p1][ii][jj] + tmpGenePool[p2][ii][jj]) / 2;
+                        }
                     }
                 }
                 // 变异算子,随机交换两行两列
@@ -175,14 +194,18 @@ public class DGA {
                     int r2 = random.nextInt(islands[id].numOver - 1);
                     if (r1 != r2) {
                         for (int j = 0; j < islands[id].numUnder; j++) {
-                            swap(tmpGenePool[i][r1][j], tmpGenePool[i][r2][j]);
+                            double tmp=tmpGenePool[i][r1][j];
+                            tmpGenePool[i][r1][j]=tmpGenePool[i][r2][j];
+                            tmpGenePool[i][r2][j]=tmp;
                         }
                     }
                     int c1 = random.nextInt(islands[id].numUnder - 1);
                     int c2 = random.nextInt(islands[id].numUnder - 1);
                     if (c1 != c2) {
                         for (int j = 0; j < islands[id].numOver; j++) {
-                            swap(tmpGenePool[i][j][c1], tmpGenePool[i][j][c2]);
+                            double tmp=tmpGenePool[i][j][c1];
+                            tmpGenePool[i][j][c1]=tmpGenePool[i][j][c2];
+                            tmpGenePool[i][j][c2]=tmp;
                         }
                     }
                 }
@@ -201,12 +224,6 @@ public class DGA {
             adjGene(islands[id], ref);
 
         }
-    }
-
-    void swap(double a, double b) {
-        double tmp = a;
-        a = b;
-        b = tmp;
     }
 
 

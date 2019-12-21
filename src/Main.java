@@ -3,8 +3,9 @@ public class Main {
     public static void main(String[] args) {
         // 参数theta、epsilon
         //HA ha=new HA(0.1,0.05);
-        // 缺两个值，产生数据后需要执行Problem里面的init函数
        // ha.heuristicAlgorithm();
+
+
 
         /*
         * S: int numSurvive; // 保留到下一代的数量
@@ -15,9 +16,6 @@ public class Main {
         * N: int numGeneration; // 迭代次数*/
         DGA dga=new DGA(10,100,0.02,0.04,0.02,1000);
         dga.distributedAlgorithm();
-
-        System.out.println("hello hujunqin");
-
 
     }
 }
