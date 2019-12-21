@@ -56,13 +56,13 @@ public class Problem {
 
     // flow[i][j]表示从微云i到微云j的工作流大小
     // 且flow[i][j]=-flow[j][i]
-    double[][] flow=new double[num][num];
+    double[][] flow=new double[num+2][num+2];
 
 
     // 初始化flow
     void initFlow(){
-        for(int i=0;i<num;i++){
-            for(int j=0;j<num;j++){
+        for(int i=0;i<num+2;i++){
+            for(int j=0;j<num+2;j++){
                 flow[i][j]=0;
             }
         }

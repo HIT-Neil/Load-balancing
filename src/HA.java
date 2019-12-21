@@ -17,7 +17,7 @@ public class HA {
     ArrayList<Integer> underloadedSet=new ArrayList<>(); // // 不过载微云集合
     Problem objProb=new Problem();
     Cloudlet[] cloudlet=new Cloudlet[objProb.num];
-
+    int cnt=0; // 记录当前边号
 
     // 启发式算法
     void heuristicAlgorithm(){
@@ -28,16 +28,17 @@ public class HA {
         initBalancedTime();
         // 根据balancedTime将微云划分为两个集合
         partition(cloudlet);
+        System.out.println("过载集合数量："+overloadSet.size());
+        System.out.println("不过载集合数量："+underloadedSet.size());
         double blnTime=Double.MAX_VALUE; // 用于判断循环结束的条件
 
         while(Math.abs(balancedTime-blnTime)> theta){
-            System.out.println(Math.abs(balancedTime-blnTime));
             // 计算迁入迁出需求
             calDemand();
             objProb.initFlow();
+            cnt=0;
             // 计算最小延迟流
             minLatencyFlow();
-            System.out.println("minFlow");
             double maxTmp=0;
             for(int j=0;j<underloadedSet.size();j++){
                 objProb.calCloudlet(cloudlet[underloadedSet.get(j)],underloadedSet.get(j));
@@ -125,11 +126,9 @@ public class HA {
 
     // 最小延迟流
     void minLatencyFlow(){
-        int sumEdge=(overloadSet.size()+underloadedSet.size()+
-                overloadSet.size()*underloadedSet.size())*2;
+        int sumEdge=(overloadSet.size()+underloadedSet.size()+ overloadSet.size()*underloadedSet.size())*2;
         int N= objProb.num+2; // 节点数
         FlowEdges[] edges=new FlowEdges[sumEdge]; // 所以边的集合
-        int cnt=0; // 记录当前边号
         int[] head=new int[N]; // 记录以当前节点为起点的最后一条边号
         int[] pre=new int[N];  // 记录增广路径
         boolean[] vis=new boolean[N]; // 已经加入队列的节点
@@ -141,20 +140,19 @@ public class HA {
         }
         // 添加从源点到过载集合的边
         for (int i = 0; i < overloadSet.size(); i++) {
-            addEdge(head,edges,cnt,objProb.num,overloadSet.get(i), cloudlet[overloadSet.get(i)].demand, 0);
+            addEdge(head,edges,objProb.num,overloadSet.get(i), cloudlet[overloadSet.get(i)].demand, 0);
         }
         // 添加从过载集合到不过载集合的边
         for (int i = 0; i < overloadSet.size(); i++) {
             for(int j=0;j<underloadedSet.size();j++){
-                addEdge(head,edges,cnt,overloadSet.get(i), underloadedSet.get(j),
+                addEdge(head,edges,overloadSet.get(i), underloadedSet.get(j),
                         Math.min(cloudlet[overloadSet.get(i)].demand,cloudlet[underloadedSet.get(j)].demand), objProb.netDelay[i][j]);
             }
         }
         // 添加从不过在集合到汇点的边
-        for (int i = 0; i < overloadSet.size(); i++) {
-            addEdge(head,edges,cnt,underloadedSet.get(i), objProb.num+1,cloudlet[underloadedSet.get(i)].demand, 0);
+        for (int i = 0; i < underloadedSet.size(); i++) {
+            addEdge(head,edges,underloadedSet.get(i), objProb.num+1,cloudlet[underloadedSet.get(i)].demand, 0);
         }
-
         // 调用最小费用最大流算法求解
         minCostMaxFlow(head,edges,N,vis,dis,pre,objProb.num, objProb.num+1);
     }
@@ -163,7 +161,6 @@ public class HA {
     void minCostMaxFlow(int[] head,FlowEdges[] edges,int N,boolean[] vis,double[] dis,int[] pre,int s, int t){
        // double incFlow = 0, incCost = 0;
         while (spfa(head,edges, N,vis,dis,pre,objProb.num, objProb.num+1)) {
-            System.out.println("spfa");
             double Min = Double.MAX_VALUE;
             for (int i = pre[t]; i != -1; i = pre[edges[i ].from])
                 Min = Math.min(Min, edges[i].capacity - edges[i].eFlow);
@@ -178,7 +175,7 @@ public class HA {
         }
     }
 
-    void addEdge(int[] head,FlowEdges[] edges,int cnt,int x,int y,double w,double c){
+    void addEdge(int[] head,FlowEdges[] edges,int x,int y,double w,double c){
         // 添加前向边
         FlowEdges newEdge=new FlowEdges();
 
@@ -189,7 +186,8 @@ public class HA {
         newEdge.eFlow = 0;
         newEdge.next = head[x];
         edges[cnt]=newEdge;
-        head[x] = cnt++;
+        head[x] = cnt;
+        cnt+=1;
         // 添加反向边
         FlowEdges antiEdge=new FlowEdges();
         antiEdge.from = y;
@@ -199,7 +197,8 @@ public class HA {
         antiEdge.eFlow = 0;
         antiEdge.next = head[y];
         edges[cnt]=antiEdge;
-        head[y] = cnt++;
+        head[y] = cnt;
+        cnt+=1;
     }
 
     // spfa算法，求解最短路径
